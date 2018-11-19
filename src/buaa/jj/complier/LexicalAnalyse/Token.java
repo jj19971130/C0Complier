@@ -22,18 +22,22 @@ public class Token {
         MoreEqual,
         Equal,
         NotEqual,
-        LiftL,
+        LeftL,
         RightL,
-        LiftM,
+        LeftM,
         RightM,
-        LiftB,
+        LeftB,
         RightB,
         Comma,
         Semicolon,
         Assignment,
         Constant,
+        String,
         Identifier
     }
 
     public Type type;
+    public int value;
+    public String name;
+    public String s;
 }
