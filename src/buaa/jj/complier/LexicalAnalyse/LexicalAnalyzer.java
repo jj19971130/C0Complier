@@ -1,13 +1,15 @@
 package buaa.jj.complier.LexicalAnalyse;
 
 import buaa.jj.complier.Compiler;
+import buaa.jj.complier.Exceptions.LexicalException;
 
 public class LexicalAnalyzer {
 
     private char c;
+    private boolean eof = false;
     private Compiler compiler;
 
-    LexicalAnalyzer(Compiler compiler) {
+    public LexicalAnalyzer(Compiler compiler) {
         this.compiler = compiler;
     }
 
@@ -62,11 +64,18 @@ public class LexicalAnalyzer {
         return type;
     }
 
-    private void getChar() {
+    public void getChar() {
         c = compiler.getChar();
+        if (c == 27)
+            eof = true;
     }
 
-    public Token getToken() {
+    public void clearState() {
+        eof = false;
+        getChar();
+    }
+
+    public Token getToken() throws LexicalException {
         Token token = new Token();
         while (c == ' ' || c == '\t' || c == '\n')
             getChar();
@@ -74,9 +83,9 @@ public class LexicalAnalyzer {
             int tmp = 0;
             do {
                 tmp *= 10;
-                tmp += c - 48 + 13;
+                tmp += c - 48;
                 getChar();
-            } while (isNumber());
+            } while (isNumber() && !eof);
             token.type = Token.Type.Constant;
             token.value = tmp;
         } else if (c == '0') {
@@ -87,73 +96,101 @@ public class LexicalAnalyzer {
             do {
                 tmp.append(c);
                 getChar();
-            } while (c == '_' || isLetter() || isNumber());
+            } while ((c == '_' || isLetter() || isNumber()) && !eof);
             Token.Type type = reserve(tmp.toString());
             if (type == Token.Type.Identifier)
                 token.name = tmp.toString();
-            token.type = Token.Type.Identifier;
+            token.type = type;
         } else {
             switch (c) {
                 case '+':
                     token.type = Token.Type.Add;
+                    getChar();
                     break;
                 case '-':
                     token.type = Token.Type.Sub;
+                    getChar();
                     break;
                 case '*':
                     token.type = Token.Type.Mult;
+                    getChar();
                     break;
                 case '/':
                     token.type = Token.Type.Div;
+                    getChar();
                     break;
                 case '<':
-                    getChar();
-                    if (c == '=')
-                        token.type = Token.Type.LessEqual;
-                    else
-                        token.type = Token.Type.Less;
+                    if (!eof) {
+                        getChar();
+                        if (c == '=') {
+                            getChar();
+                            token.type = Token.Type.LessEqual;
+                            break;
+                        }
+                    }
+                    token.type = Token.Type.Less;
                     break;
                 case '>':
-                    getChar();
-                    if (c == '=')
-                        token.type = Token.Type.MoreEqual;
-                    else
-                        token.type = Token.Type.More;
+                    if (!eof) {
+                        getChar();
+                        if (c == '=') {
+                            getChar();
+                            token.type = Token.Type.MoreEqual;
+                            break;
+                        }
+                    }
+                    token.type = Token.Type.More;
                     break;
                 case '=':
-                    getChar();
-                    if (c == '=')
-                        token.type = Token.Type.Equal;
-                    else
-                        token.type = Token.Type.Assignment;
+                    if (!eof) {
+                        getChar();
+                        if (c == '=') {
+                            getChar();
+                            token.type = Token.Type.Equal;
+                            break;
+                        }
+                    }
+                    token.type = Token.Type.Assignment;
                     break;
                 case '!':
-                    getChar();;
+                    if (eof) {
+                        error();
+                    }
+                    getChar();
                     if (c == '=')
+                        getChar();
                         token.type = Token.Type.NotEqual;
                     break;
                 case '(':
+                    getChar();
                     token.type = Token.Type.LeftL;
                     break;
                 case ')':
+                    getChar();
                     token.type = Token.Type.RightL;
                     break;
                 case '[':
+                    getChar();
                     token.type = Token.Type.LeftM;
                     break;
                 case ']':
+                    getChar();
                     token.type = Token.Type.RightM;
                     break;
                 case '{':
+                    getChar();
                     token.type = Token.Type.LeftB;
                     break;
                 case '}':
+                    getChar();
                     token.type = Token.Type.RightB;
                     break;
                 case ',':
+                    getChar();
                     token.type = Token.Type.Comma;
                     break;
                 case ';':
+                    getChar();
                     token.type = Token.Type.Semicolon;
                     break;
                 case '"':
@@ -161,6 +198,8 @@ public class LexicalAnalyzer {
                     do {
                         tmp.append(c);
                         getChar();
+                        if (eof)
+                            error();
                     } while (c == '"');
                     token.type = Token.Type.String;
                     token.s = tmp.toString();
@@ -173,7 +212,8 @@ public class LexicalAnalyzer {
         return token;
     }
 
-    private void error() {
-
+    private void error() throws LexicalException {
+        getChar();
+        throw new LexicalException();
     }
 }
