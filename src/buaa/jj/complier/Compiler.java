@@ -270,7 +270,7 @@ public class Compiler extends Application {
     public void updateLineColumnNum(Event event) {
         int i = code.getAnchor();
         String s = code.getText(0,i);
-        int num = 0, a = 1;
+        int num = -1, a = 1;
         while ((num = s.indexOf('\n',num + 1)) != -1) {
             a++;
         }
@@ -294,13 +294,13 @@ public class Compiler extends Application {
                     tokens.add(lexicalAnalyzer.getToken());
                 } catch (Exception e) {
                     String s = code.getText(0,i - 1);
-                    int num = 0, a = 1;
+                    int num = -1, a = 1;
                     while ((num = s.indexOf('\n',num + 1)) != -1) {
                         a++;
                     }
                     int last = s.lastIndexOf('\n');
-                    int b = s.length() - last == -1 ? last : i - 1;
-                    compileInformation.setText(compileInformation.getText() + a + "行" + b + "列处出现词法错误");
+                    int b = s.length() - (last == -1 ? 0 : last + 1);
+                    compileInformation.setText(compileInformation.getText() + a + "行" + b + "列处出现词法错误\n");
                 }
             } while (i <= lenth);
             compileInformation.setText(compileInformation.getText() + buildString());
