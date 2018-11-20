@@ -304,6 +304,7 @@ public class Compiler extends Application {
                 }
             } while (i <= lenth);
             compileInformation.setText(compileInformation.getText() + buildString());
+            System.out.println(compileInformation.getText());
         }
     }
 

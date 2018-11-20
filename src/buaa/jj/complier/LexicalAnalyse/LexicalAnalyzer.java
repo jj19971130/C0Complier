@@ -89,6 +89,7 @@ public class LexicalAnalyzer {
             token.type = Token.Type.Constant;
             token.value = tmp;
         } else if (c == '0') {
+            getChar();
             token.type = Token.Type.Constant;
             token.value = 0;
         } else if (c == '_' || isLetter()) {
