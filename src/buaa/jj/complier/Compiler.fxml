@@ -30,7 +30,7 @@
       <Button id="button_open" fx:id="button_open" mnemonicParsing="false" onMouseClicked="#onButtonOpenClicked" text="Open" />
       <Button id="button_save" fx:id="button_save" mnemonicParsing="false" onMouseClicked="#onButtonSaveClicked" text="Save" textAlignment="CENTER" GridPane.columnIndex="1" />
       <Button mnemonicParsing="false" onMouseClicked="#onButtonCompileClicked" prefHeight="26.0" prefWidth="77.0" text="Compile" GridPane.columnIndex="2" />
-      <TextArea fx:id="code" onKeyPressed="#updateLineColumnNum" onKeyReleased="#updateLineColumnNum" onMouseClicked="#updateLineColumnNum" GridPane.columnSpan="5" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS" />
+      <TextArea fx:id="code" onKeyPressed="#updateLineColumnNum" onKeyReleased="#updateLineColumnNum" onKeyTyped="#onKeyboardTyped" onMouseClicked="#updateLineColumnNum" GridPane.columnSpan="5" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS" />
       <Accordion GridPane.columnSpan="5" GridPane.rowIndex="2">
         <panes>
           <TitledPane animated="false" text="编译信息">

@@ -1,9 +1,11 @@
 package buaa.jj.complier;
 
+import buaa.jj.complier.Events.CompileInformationEvent;
+import buaa.jj.complier.Events.EOFEvent;
 import buaa.jj.complier.LexicalAnalyse.LexicalAnalyzer;
 import buaa.jj.complier.LexicalAnalyse.Token;
+import buaa.jj.complier.SyntaxAnalysis.SyntaxAnalyzer;
 import javafx.application.Application;
-import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -18,16 +20,17 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.*;
-import java.util.LinkedList;
+import java.util.EventListener;
 import java.util.Queue;
 
-public class Compiler extends Application {
+public class Compiler extends Application implements EventListener {
 
-    LexicalAnalyzer lexicalAnalyzer = new LexicalAnalyzer(this);
+    private LexicalAnalyzer lexicalAnalyzer;
+    private SyntaxAnalyzer syntaxAnalyzer;
 
     private File currentFile;
     private int i;
-    private Queue<Token> tokens;
+    private int errorNum;
 
     @FXML
     Button button_open;
@@ -47,188 +50,32 @@ public class Compiler extends Application {
     public char getChar() {
         int n = code.getLength();
         if (i >= n) {
-            i++;
-            return 27;
+            lexicalAnalyzer.handleEOFEvent(new EOFEvent(this));
+            return ' ';
         }
         return code.getText().charAt(i++);
     }
 
-    private String buildString() {
-        StringBuilder s = new StringBuilder();
-        while (!tokens.isEmpty()) {
-            Token token = tokens.poll();
-            switch (token.type) {
-                case Identifier:
-                    s.append(token.name + ' ');
-                    s.append("关键字 ");
-                    s.append(token.name + ' ');
-                    break;
-                case Constant:
-                    s.append(token.value);
-                    s.append(' ');
-                    s.append("常数 ");
-                    s.append(Integer.toBinaryString(token.value));
-                    break;
-                case String:
-                    s.append(token.s + ' ');
-                    s.append("字符串 ");
-                    s.append(token.s);
-                    break;
-                case If:
-                    s.append("if ");
-                    s.append("关键字 ");
-                    s.append("if ");
-                    break;
-                case Else:
-                    s.append("else ");
-                    s.append("关键字 ");
-                    s.append("else ");
-                    break;
-                case Int:
-                    s.append("int ");
-                    s.append("关键字 ");
-                    s.append("int ");
-                    break;
-                case Main:
-                    s.append("main ");
-                    s.append("关键字 ");
-                    s.append("main ");
-                    break;
-                case Void:
-                    s.append("void ");
-                    s.append("关键字 ");
-                    s.append("void ");
-                    break;
-                case Const:
-                    s.append("const ");
-                    s.append("关键字 ");
-                    s.append("const ");
-                    break;
-                case Scanf:
-                    s.append("scanf ");
-                    s.append("关键字 ");
-                    s.append("scanf ");
-                    break;
-                case While:
-                    s.append("printf ");
-                    s.append("关键字 ");
-                    s.append("printf ");
-                    break;
-                case Printf:
-                    s.append("printf ");
-                    s.append("关键字 ");
-                    s.append("printf ");
-                    break;
-                case Return:
-                    s.append("return ");
-                    s.append("关键字 ");
-                    s.append("return ");
-                    break;
-                case Add:
-                    s.append("+ ");
-                    s.append("运算符 ");
-                    s.append("+ ");
-                    break;
-                case Sub:
-                    s.append("- ");
-                    s.append("运算符 ");
-                    s.append("- ");
-                    break;
-                case Mult:
-                    s.append("* ");
-                    s.append("运算符 ");
-                    s.append("* ");
-                    break;
-                case Div:
-                    s.append("/ ");
-                    s.append("运算符 ");
-                    s.append("/ ");
-                    break;
-                case Less:
-                    s.append("< ");
-                    s.append("运算符 ");
-                    s.append("< ");
-                    break;
-                case LessEqual:
-                    s.append("<= ");
-                    s.append("运算符 ");
-                    s.append("<= ");
-                    break;
-                case More:
-                    s.append("> ");
-                    s.append("运算符 ");
-                    s.append("> ");
-                    break;
-                case MoreEqual:
-                    s.append(">= ");
-                    s.append("运算符 ");
-                    s.append(">= ");
-                    break;
-                case Equal:
-                    s.append("== ");
-                    s.append("运算符 ");
-                    s.append("== ");
-                    break;
-                case NotEqual:
-                    s.append("!= ");
-                    s.append("运算符 ");
-                    s.append("!= ");
-                    break;
-                case Assignment:
-                    s.append("= ");
-                    s.append("运算符 ");
-                    s.append("= ");
-                    break;
-                case Comma:
-                    s.append(", ");
-                    s.append("分隔符 ");
-                    s.append(", ");
-                    break;
-                case Semicolon:
-                    s.append("; ");
-                    s.append("分隔符 ");
-                    s.append("; ");
-                    break;
-                case LeftL:
-                    s.append("( ");
-                    s.append("分隔符 ");
-                    s.append("( ");
-                    break;
-                case RightL:
-                    s.append(") ");
-                    s.append("分隔符 ");
-                    s.append(") ");
-                    break;
-                case LeftM:
-                    s.append("[ ");
-                    s.append("分隔符 ");
-                    s.append("[ ");
-                    break;
-                case RightM:
-                    s.append("] ");
-                    s.append("分隔符 ");
-                    s.append("] ");
-                    break;
-                case LeftB:
-                    s.append("{ ");
-                    s.append("分隔符 ");
-                    s.append("{ ");
-                    break;
-                case RightB:
-                    s.append("} ");
-                    s.append("分隔符 ");
-                    s.append("} ");
-                    break;
-            }
-            s.append('\n');
+    public int[] getPos() {
+        return getLineColumnNum(i - 1);
+    }
+
+    public void handleCompileInformationEvent(CompileInformationEvent event) {
+        if (event.getError()) {
+            errorNum++;
         }
-        return s.toString();
+        if (errorNum >= 20) {
+            lexicalAnalyzer.interrupt();
+            syntaxAnalyzer.interrupt();
+        }
+        compileInformation.setText(compileInformation.getText() + event.getMessage() + '\n');
     }
 
     public static void main(String args[]) {
         launch(args);
     }
 
+    //打开文件
     public void onButtonOpenClicked(MouseEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("打开文件");
@@ -249,6 +96,7 @@ public class Compiler extends Application {
         }
     }
 
+    //保存文件
     public void onButtonSaveClicked(MouseEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("保存文件");
@@ -267,28 +115,44 @@ public class Compiler extends Application {
         }
     }
 
+    //更新行列数
     public void updateLineColumnNum(Event event) {
         int i = code.getAnchor();
+        int[] xy = getLineColumnNum(i);
+        StringBuilder sb = new StringBuilder();
+        sb.append(xy[0]);
+        sb.append(":");
+        sb.append(xy[1]);
+        lineColumn.setText(sb.toString());
+    }
+
+    private int[] getLineColumnNum(int i) {
+        int[] ret = new int[2];
         String s = code.getText(0,i);
         int num = -1, a = 1;
         while ((num = s.indexOf('\n',num + 1)) != -1) {
             a++;
         }
         int b = s.length() - s.lastIndexOf('\n');
-        StringBuilder sb = new StringBuilder();
-        sb.append(a);
-        sb.append(":");
-        sb.append(b);
-        lineColumn.setText(sb.toString());
+        ret[0] = a;
+        ret[1] = b;
+        return ret;
     }
 
+    //开始编译
     public void onButtonCompileClicked(MouseEvent event) {
+        lexicalAnalyzer = new LexicalAnalyzer(this);
+        syntaxAnalyzer = lexicalAnalyzer.syntaxAnalyzer;
+        //清空编译信息
         compileInformation.setText("");
-        tokens = new LinkedList<Token>();
         i = 0;
+        errorNum = 0;
         if (code.getLength() != 0) {
+            //初始化词法分析器
             lexicalAnalyzer.clearState();
-            int lenth = code.getLength();
+            lexicalAnalyzer.start();
+            syntaxAnalyzer.start();
+            /*
             do {
                 try {
                     tokens.add(lexicalAnalyzer.getToken());
@@ -303,9 +167,13 @@ public class Compiler extends Application {
                     compileInformation.setText(compileInformation.getText() + a + "行" + b + "列处出现词法错误\n");
                 }
             } while (i <= lenth);
-            compileInformation.setText(compileInformation.getText() + buildString());
-            System.out.println(compileInformation.getText());
+            compileInformation.setText(compileInformation.getText());
+            System.out.println(compileInformation.getText());*/
         }
+    }
+
+    public void onKeyboardTyped(KeyEvent event) {
+
     }
 
     @Override
