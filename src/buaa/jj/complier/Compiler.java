@@ -32,6 +32,8 @@ public class Compiler extends Application implements EventListener {
     private int i;
     private int errorNum;
 
+    public static Logger logger = new Logger();
+
     @FXML
     Button button_open;
 
@@ -72,6 +74,7 @@ public class Compiler extends Application implements EventListener {
     }
 
     public static void main(String args[]) {
+        System.setOut(logger);
         launch(args);
     }
 
