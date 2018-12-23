@@ -1,6 +1,7 @@
 package buaa.jj.complier.SyntaxAnalysis;
 
 import buaa.jj.complier.LexicalAnalyse.Identifier;
+import javafx.util.Pair;
 
 import java.util.*;
 
@@ -15,23 +16,24 @@ public class IdentifierList {
         level.push(0);
     }
 
-    public Identifier findIdentifier(String name,Integer layer) {
+    public Pair<Identifier,Integer> findIdentifier(String name) {
+        int layer = 0;
         ListIterator<Identifier> i = list.listIterator(list.size());
         while (i.hasPrevious()) {
             Identifier tmp = i.previous();
             if (tmp.name.equals(name)) {
-                int pos = list.search(tmp);
+                int pos = list.size() - list.search(tmp);
                 ListIterator<Integer> j = level.listIterator(level.size());
                 while (j.hasPrevious()) {
                     Integer tmp1 = j.previous();
-                    if (tmp1 != 0) {
-                        if (tmp1 < pos) {
+                    if (j.hasPrevious()) {
+                        if (tmp1 > pos) {
                             layer++;
                         } else {
-                            return tmp;
+                            return new Pair<>(tmp,layer);
                         }
                     } else {
-                        return tmp;
+                        return new Pair<>(tmp,layer);
                     }
                 }
             }
@@ -63,7 +65,8 @@ public class IdentifierList {
     }
 
     public boolean changeIdentifier(String name, Identifier identifier) {
-        Identifier tmp = findIdentifier(name, 0);
+        Pair<Identifier,Integer> tmp1 = findIdentifier(name);
+        Identifier tmp = tmp1.getKey();
         if (tmp == null) {
             return false;
         } else {

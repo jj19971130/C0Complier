@@ -6,6 +6,7 @@ import buaa.jj.complier.Events.EOFEvent;
 import buaa.jj.complier.LexicalAnalyse.Identifier;
 import buaa.jj.complier.LexicalAnalyse.LexicalAnalyzer;
 import buaa.jj.complier.LexicalAnalyse.Token;
+import javafx.util.Pair;
 
 import java.util.ArrayList;
 import java.util.EventListener;
@@ -74,13 +75,13 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                         identifier.type = 1;
                         identifier.delcare = tmpx;
                         if (!identifierList.insertIdentifier(identifier,false)) {
-                            error(token);
+                            error(token,"标示符重复定义");
                         }
                     }
                     do {
                         getToken();
                         if (token.type != Token.Type.Identifier) {
-                            error(token);
+                            error(token,"缺少标示符");
                         }
                         {//变量插入符号表
                             Identifier identifier = new Identifier();
@@ -88,7 +89,7 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                             identifier.type = 1;
                             identifier.delcare = token.x;
                             if (!identifierList.insertIdentifier(identifier,false)) {
-                                error(token);
+                                error(token,"标示符重复定义");
                             }
                         }
                         getToken();
@@ -96,12 +97,12 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                     if (token.type == Token.Type.Semicolon) {
                         getToken();
                     } else {
-                        error(token);
+                        error(token,"缺少分号");
                     }
                     if (token.type == Token.Type.Void || token.type == Token.Type.Int) { //变量声明结束，函数声明开始
                         A1(token.type == Token.Type.Int);
                     } else {
-                        error(token);
+                        error(token,"缺少函数返回值类型");
                     }
                 } else if (token.type == Token.Type.LeftL) {
                     {//函数插入符号表
@@ -118,16 +119,16 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                     if (token.type == Token.Type.Void || token.type == Token.Type.Int) { //处理后序函数声明
                         A1(token.type == Token.Type.Int);
                     } else {
-                        error(token);
+                        error(token,"缺少函数返回值类型");
                     }
                 } else {
-                    error(token);
+                    error(token,"语法错误");
                 }
             }
         } else if (token.type == Token.Type.Void) { //处理函数声明
             A1(false);
         } else {
-            error(token);
+            error(token,"语法错误");
         }
     }
 
@@ -190,14 +191,14 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                         }
                         I();
                     } else {
-                        error(token);
+                        error(token, "缺少函数名");
                     }
                 } else {
-                    error(token);
+                    error(token,"缺少函数返回值类型");
                 }
             } while (true);
         } else {
-            error(token);
+            error(token,"缺少标示符");
         }
     }
 
@@ -210,10 +211,10 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
             if (token.type == Token.Type.Semicolon) {
                 getToken();
             } else {
-                error(token);
+                error(token,"缺少分号");
             }
         } else {
-            error(token);
+            error(token,"缺少const");
         }
     }
 
@@ -230,13 +231,13 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                 getToken();
                 identifier.value = D(false);
                 if (!identifierList.insertIdentifier(identifier,false)) {
-                    error(token);
+                    error(token,"标示符重复定义");
                 }
             } else {
-                error(token);
+                error(token,"缺少赋值运算符");
             }
         } else {
-            error(token);
+            error(token,"缺少标示符");
         }
     }
 
@@ -256,7 +257,7 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
             getToken();
             return ret;
         } else {
-            error(token);
+            error(token,"缺少常数");
             return 0;
         }
     }
@@ -271,10 +272,10 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
             if (token.type == Token.Type.Identifier) {
                 getToken();
             } else {
-                error(token);
+                error(token,"缺少标示符");
             }
         } else {
-            error(token);
+            error(token,"缺少int");
         }
     }
 
@@ -288,15 +289,15 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                     identifier.type = 1;
                     identifier.delcare = token.x;
                     if (!identifierList.insertIdentifier(identifier,false)) {
-                        error(token);
+                        error(token,"标示符重复定义");
                     }
                 }
                 getToken();
             } else {
-                error(token);
+                error(token,"缺少标示符");
             }
         } else {
-            error(token);
+            error(token,"缺少int");
         }
         while (token.type == Token.Type.Comma) {
             getToken();
@@ -308,18 +309,18 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                     identifier.type = 1;
                     identifier.delcare = token.x;
                     if (!identifierList.insertIdentifier(identifier,false)) {
-                        error(token);
+                        error(token,"标示符重复定义");
                     }
                 }
                 getToken();
             } else {
-                error(token);
+                error(token,"缺少标示符");
             }
         }
         if (token.type == Token.Type.Semicolon) {
             getToken();
         } else {
-            error(token);
+            error(token,"缺少分号");
         }
     }
 
@@ -342,10 +343,10 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                 identifierList.removeLevel();
                 getToken();
             } else {
-                error(token);
+                error(token,"缺少右大括号");
             }
         } else {
-            error(token);
+            error(token,"缺少左大括号");
         }
     }
 
@@ -355,9 +356,9 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
             List<String> names = new ArrayList<String>();
             K(identifier,names);
             for (int i = 0; i < identifier.param; i++) {
-                Identifier identifier1 = identifierList.findIdentifier(names.get(identifier.param - i - 1),0);
+                Identifier identifier1 = identifierList.findIdentifier(names.get(identifier.param - i - 1)).getKey();
                 if (identifier1 == null) {
-                    error(token);
+                    error(token,"标示符未定义");
                 } else {
                     System.out.println("STO 0," + identifier1.address);
                 }
@@ -366,10 +367,10 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                 identifierList.insertIdentifier(identifier,true);
                 getToken();
             } else {
-                error(token);
+                error(token,"缺少右括号");
             }
         } else {
-            error(token);
+            error(token,"缺少左括号");
         }
     }
 
@@ -385,7 +386,7 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                     identifier1.type = 1;
                     identifier1.delcare = token.x;
                     if (!identifierList.insertIdentifier(identifier1,false)) {
-                        error(token);
+                        error(token,"标示符重复定义");
                     }
                 }
                 getToken();
@@ -402,21 +403,21 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                                 identifier1.type = 1;
                                 identifier1.delcare = token.x;
                                 if (!identifierList.insertIdentifier(identifier1,false)) {
-                                    error(token);
+                                    error(token,"标示符重复定义");
                                 }
                             }
                             getToken();
                         } else {
-                            error(token);
+                            error(token,"缺少标示符");
                             break;
                         }
                     } else {
-                        error(token);
+                        error(token,"缺少int");
                         break;
                     }
                 }
             } else {
-                error(token);
+                error(token,"缺少标示符");
             }
         }
     }
@@ -460,24 +461,26 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
             String name = token.name;
             getToken();
             if (token.type == Token.Type.LeftL) {
-                Integer layer = 0;
-                Identifier identifier = identifierList.findIdentifier(name, layer);
+                Pair<Identifier,Integer> pair = identifierList.findIdentifier(name);
+                Integer layer = pair.getValue();
+                Identifier identifier = pair.getKey();
                 getToken();
                 V();
                 if (token.type == Token.Type.RightL) {
                     if (identifier == null) {
-                        error(token);
+                        error(token,"标示符未声明");
                     } else
                         System.out.println("CALL " + layer + "," + identifier.address);
                     getToken();
                 } else {
-                    error(token);
+                    error(token,"缺少右括号");
                 }
             } else {
-                Integer layer = 0;
-                Identifier identifier= identifierList.findIdentifier(name, layer);
+                Pair<Identifier,Integer> pair = identifierList.findIdentifier(name);
+                Integer layer = pair.getValue();
+                Identifier identifier = pair.getKey();
                 if (identifier == null) {
-                    error(token);
+                    error(token,"标示符未声明");
                 } else
                     System.out.println("LOD " + layer + "," + identifier.address);
             }
@@ -486,7 +489,7 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
             if (token.type == Token.Type.RightL) {
                 getToken();
             } else {
-                error(token);
+                error(token,"缺少右括号");
             }
         } else if (token.type == Token.Type.Add || token.type == Token.Type.Sub || token.type == Token.Type.Constant) {
             D(true);
@@ -508,12 +511,13 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                 if (token.type == Token.Type.RightB) {
                     getToken();
                 } else {
-                    error(token);
+                    error(token,"缺少右大括号");
                 }
                 break;
             case Identifier:
-                Integer layer = 0;
-                Identifier identifier = identifierList.findIdentifier(token.name,layer);
+                Pair<Identifier,Integer> pair = identifierList.findIdentifier(token.name);
+                Integer layer = pair.getValue();
+                Identifier identifier = pair.getKey();
                 getToken();
                 if (token.type == Token.Type.LeftL) {
                     getToken();
@@ -521,24 +525,24 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                     if (token.type == Token.Type.RightL) {
                         String s = "make ide happy";
                         if (identifier == null) {
-                            error(token);
+                            error(token,"标示符未声明");
                         } else
                             System.out.println("CALL " + layer + "," + identifier.address);
                         getToken();
                     } else {
-                        error(token);
+                        error(token,"缺少右括号");
                     }
                 } else if (token.type == Token.Type.Assignment) {
                     getToken();
                     M();
                     System.out.println("STO " + layer + "," + identifier.address);
                 } else {
-                    error(token);
+                    error(token,"缺少等号");
                 }
                 if (token.type == Token.Type.Semicolon) {
                     getToken();
                 } else {
-                    error(token);
+                    error(token,"缺少分号");
                 }
                 break;
             case Return:
@@ -546,7 +550,7 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                 if (token.type == Token.Type.Semicolon) {
                     getToken();
                 } else {
-                    error(token);
+                    error(token,"缺少分号");
                 }
                 break;
             case Scanf:
@@ -554,7 +558,7 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                 if (token.type == Token.Type.Semicolon) {
                     getToken();
                 } else {
-                    error(token);
+                    error(token,"缺少分号");
                 }
                 break;
             case Printf:
@@ -562,7 +566,7 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                 if (token.type == Token.Type.Semicolon) {
                     getToken();
                 } else {
-                    error(token);
+                    error(token,"缺少分号");
                 }
                 break;
         }
@@ -593,13 +597,13 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                     }
                     Compiler.logger.setBuffer(false);
                 } else {
-                    error(token);
+                    error(token,"缺少右括号");
                 }
             } else {
-                error(token);
+                error(token,"缺少左括号");
             }
         } else {
-            error(token);
+            error(token,"语法错误");
         }
     }
 
@@ -647,13 +651,13 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                     Compiler.logger.insertJmc();
                     Compiler.logger.setBuffer(false);
                 } else {
-                    error(token);
+                    error(token,"缺少右括号");
                 }
             } else {
-                error(token);
+                error(token,"缺少左括号");
             }
         } else {
-            error(token);
+            error(token,"语法错误");
         }
     }
 
@@ -666,13 +670,13 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                 if (token.type == Token.Type.RightL) {
                     getToken();
                 } else {
-                    error(token);
+                    error(token,"缺少右括号");
                 }
             } else {
-                error(token);
+                error(token,"缺少左括号");
             }
         } else {
-            error(token);
+            error(token,"语法错误");
         }
     }
 
@@ -700,26 +704,27 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
             if (token.type == Token.Type.LeftL) {
                 getToken();
                 if (token.type == Token.Type.Identifier) {
-                    Integer layer = 0;
-                    Identifier identifier = identifierList.findIdentifier(token.name,layer);
+                    Pair<Identifier,Integer> pair = identifierList.findIdentifier(token.name);
+                    Integer layer = pair.getValue();
+                    Identifier identifier = pair.getKey();
                     if (identifier == null) {
-                        error(token);
+                        error(token,"标示符未声明");
                     } else
                         System.out.println("RED " + layer + "," + identifier.address);
                     getToken();
                     if (token.type == Token.Type.RightL) {
                         getToken();
                     } else {
-                        error(token);
+                        error(token,"缺少右括号");
                     }
                 } else {
-                    error(token);
+                    error(token,"缺少标示符");
                 }
             } else {
-                error(token);
+                error(token,"缺少左括号");
             }
         } else {
-            error(token);
+            error(token,"语法错误");
         }
     }
 
@@ -738,7 +743,7 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                                 || token.type == Token.Type.LeftL || token.type == Token.Type.Identifier) {
                             M();
                         } else {
-                            error(token);
+                            error(token,"缺少表达式");
                         }
                     }
                 }
@@ -749,13 +754,13 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                 if (token.type == Token.Type.RightL) {
                     getToken();
                 } else {
-                    error(token);
+                    error(token,"缺少右括号");
                 }
             } else {
-                error(token);
+                error(token,"缺少左括号");
             }
         } else {
-            error(token);
+            error(token,"语法错误");
         }
     }
 
@@ -768,15 +773,15 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                 if (token.type == Token.Type.RightL) {
                     getToken();
                 } else {
-                    error(token);
+                    error(token,"缺少右括号");
                 }
             }
         } else {
-            error(token);
+            error(token,"语法错误");
         }
     }
 
-    private void error(Token token) {
-        compiler.handleCompileInformationEvent(new CompileInformationEvent(this,"语法分析在" + token.x + "行" + token.y + "列处出现错误",true));
+    private void error(Token token, String errorMessage) {
+        compiler.handleCompileInformationEvent(new CompileInformationEvent(this,"语法分析在" + token.x + "行" + token.y + "列处出现错误，" + errorMessage,true));
     }
 }
