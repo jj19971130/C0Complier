@@ -31,6 +31,9 @@ public class Compiler extends Application implements EventListener {
     private File currentFile;
     private int i;
     private int errorNum;
+    private String code;
+    private boolean finish;
+    private boolean started;
 
     public static Logger logger = new Logger();
 
@@ -41,7 +44,7 @@ public class Compiler extends Application implements EventListener {
     Button button_save;
 
     @FXML
-    TextArea code;
+    TextArea codearea;
 
     @FXML
     TextArea compileInformation;
@@ -50,12 +53,12 @@ public class Compiler extends Application implements EventListener {
     TextField lineColumn;
 
     public char getChar() {
-        int n = code.getLength();
+        int n = code.length();
         if (i >= n) {
             lexicalAnalyzer.handleEOFEvent(new EOFEvent(this));
-            return ' ';
+            return 27;
         }
-        return code.getText().charAt(i++);
+        return code.charAt(i++);
     }
 
     public int[] getPos() {
@@ -71,6 +74,9 @@ public class Compiler extends Application implements EventListener {
             syntaxAnalyzer.interrupt();
         }
         compileInformation.setText(compileInformation.getText() + event.getMessage() + '\n');
+        if (event.getMessage().equals("语法分析结束") && errorNum == 0) {
+            finish = true;
+        }
     }
 
     public static void main(String args[]) {
@@ -84,12 +90,12 @@ public class Compiler extends Application implements EventListener {
         fileChooser.setTitle("打开文件");
         currentFile = fileChooser.showOpenDialog(null);
         if (currentFile != null) {
-            code.setText("");
+            codearea.setText("");
             try {
                 BufferedReader reader = new BufferedReader(new FileReader(currentFile));
                 String s = reader.readLine();
                 while (s != null) {
-                    code.setText(code.getText(0,code.getLength()) + s + "\n");
+                    codearea.setText(codearea.getText(0,codearea.getLength()) + s + "\n");
                     s = reader.readLine();
                 }
                 reader.close();
@@ -109,7 +115,7 @@ public class Compiler extends Application implements EventListener {
                 if (!currentFile.exists())
                     currentFile.createNewFile();
                 BufferedWriter writer = new BufferedWriter(new FileWriter(currentFile));
-                writer.write(code.getText(),0,code.getLength());
+                writer.write(codearea.getText(),0,codearea.getLength());
                 writer.flush();
                 writer.close();
             } catch (IOException e) {
@@ -120,18 +126,23 @@ public class Compiler extends Application implements EventListener {
 
     //更新行列数
     public void updateLineColumnNum(Event event) {
-        int i = code.getAnchor();
-        int[] xy = getLineColumnNum(i);
+        int i = codearea.getAnchor();
+        String s = codearea.getText(0,i);
+        int num = -1, a = 1;
+        while ((num = s.indexOf('\n',num + 1)) != -1) {
+            a++;
+        }
+        int b = s.length() - s.lastIndexOf('\n');
         StringBuilder sb = new StringBuilder();
-        sb.append(xy[0]);
+        sb.append(a);
         sb.append(":");
-        sb.append(xy[1]);
+        sb.append(b);
         lineColumn.setText(sb.toString());
     }
 
     private int[] getLineColumnNum(int i) {
         int[] ret = new int[2];
-        String s = code.getText(0,i);
+        String s = code.substring(0,i);
         int num = -1, a = 1;
         while ((num = s.indexOf('\n',num + 1)) != -1) {
             a++;
@@ -143,35 +154,46 @@ public class Compiler extends Application implements EventListener {
     }
 
     //开始编译
-    public void onButtonCompileClicked(MouseEvent event) {
+    public void onButtonCompileClicked(MouseEvent event) throws InterruptedException {
         lexicalAnalyzer = new LexicalAnalyzer(this);
         syntaxAnalyzer = lexicalAnalyzer.syntaxAnalyzer;
         //清空编译信息
         compileInformation.setText("");
         i = 0;
         errorNum = 0;
-        if (code.getLength() != 0) {
+        if (codearea.getLength() != 0) {
             //初始化词法分析器
             lexicalAnalyzer.clearState();
+            logger.clearState();
+            code = codearea.getText();
             lexicalAnalyzer.start();
             syntaxAnalyzer.start();
-            /*
-            do {
-                try {
-                    tokens.add(lexicalAnalyzer.getToken());
-                } catch (Exception e) {
-                    String s = code.getText(0,i - 1);
-                    int num = -1, a = 1;
-                    while ((num = s.indexOf('\n',num + 1)) != -1) {
-                        a++;
-                    }
-                    int last = s.lastIndexOf('\n');
-                    int b = s.length() - (last == -1 ? 0 : last + 1);
-                    compileInformation.setText(compileInformation.getText() + a + "行" + b + "列处出现词法错误\n");
+            while (true) {
+                if (errorNum > 0) {
+                    break;
                 }
-            } while (i <= lenth);
-            compileInformation.setText(compileInformation.getText());
-            System.out.println(compileInformation.getText());*/
+                if (!finish) {
+                    Thread.sleep(100);
+                    continue;
+                }
+                finish = false;
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("保存P-code");
+                currentFile = fileChooser.showSaveDialog(null);
+                if (currentFile != null) {
+                    try {
+                        if (!currentFile.exists())
+                            currentFile.createNewFile();
+                        BufferedWriter writer = new BufferedWriter(new FileWriter(currentFile));
+                        writer.write(logger.finalCode.toString());
+                        writer.flush();
+                        writer.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                break;
+            }
         }
     }
 

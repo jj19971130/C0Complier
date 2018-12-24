@@ -7,7 +7,9 @@ public class Logger extends PrintStream {
     boolean state = false;
     int offset = 0;
 
-    StringBuilder buffer = new StringBuilder();
+    private StringBuilder buffer = new StringBuilder();
+
+    public StringBuilder finalCode = new StringBuilder();
 
     Logger() {
         super(System.out);
@@ -21,9 +23,10 @@ public class Logger extends PrintStream {
     public void setBuffer(boolean state) {
         if (state) {
             this.state = true;
-            buffer.reverse();
+            buffer.delete(0,buffer.length());
         } else {
             this.state = false;
+            finalCode.append(buffer);
             print(buffer);
         }
     }
@@ -31,13 +34,13 @@ public class Logger extends PrintStream {
     public void insertJmp() {
         int i = buffer.lastIndexOf("JMP 0,0");
         i += 6;
-        buffer.replace(i,i + 1,++num + "");
+        buffer.replace(i,i + 1,num + "");
     }
 
     public void insertJmc() {
         int i = buffer.lastIndexOf("JMC 0,0");
         i += 6;
-        buffer.replace(i,i + 1,++num + "");
+        buffer.replace(i,i + 1,num + "");
     }
 
     @Override
@@ -45,7 +48,14 @@ public class Logger extends PrintStream {
         num++;
         if (state) {
             buffer.append(x + '\n');
-        } else
+        } else {
+            finalCode.append(x + '\n');
             super.println(x);
+        }
+    }
+
+    @Override
+    public void print(String s) {
+        super.print(s);
     }
 }

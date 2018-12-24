@@ -356,11 +356,11 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
             List<String> names = new ArrayList<String>();
             K(identifier,names);
             for (int i = 0; i < identifier.param; i++) {
-                Identifier identifier1 = identifierList.findIdentifier(names.get(identifier.param - i - 1)).getKey();
+                Pair<Integer,Integer> identifier1 = identifierList.findIdentifier(names.get(identifier.param - i - 1));
                 if (identifier1 == null) {
                     error(token,"标示符未定义");
                 } else {
-                    System.out.println("STO 0," + identifier1.address);
+                    System.out.println("STO 0," + identifier1.getKey());
                 }
             }
             if (token.type == Token.Type.RightL) {
@@ -461,28 +461,29 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
             String name = token.name;
             getToken();
             if (token.type == Token.Type.LeftL) {
-                Pair<Identifier,Integer> pair = identifierList.findIdentifier(name);
-                Integer layer = pair.getValue();
-                Identifier identifier = pair.getKey();
+                Pair<Integer,Integer> pair = identifierList.findIdentifier(name);
                 getToken();
                 V();
                 if (token.type == Token.Type.RightL) {
-                    if (identifier == null) {
+                    if (pair == null) {
                         error(token,"标示符未声明");
-                    } else
-                        System.out.println("CALL " + layer + "," + identifier.address);
+                    } else {
+                        Integer layer = pair.getValue();
+                        System.out.println("CAL " + layer + "," + pair.getKey());
+                    }
                     getToken();
                 } else {
                     error(token,"缺少右括号");
                 }
             } else {
-                Pair<Identifier,Integer> pair = identifierList.findIdentifier(name);
-                Integer layer = pair.getValue();
-                Identifier identifier = pair.getKey();
-                if (identifier == null) {
+                Pair<Integer,Integer> pair = identifierList.findIdentifier(name);
+                if (pair == null) {
                     error(token,"标示符未声明");
-                } else
-                    System.out.println("LOD " + layer + "," + identifier.address);
+                } else {
+                    Integer layer = pair.getValue();
+                    System.out.println("LOD " + layer + "," + pair.getKey());
+                }
+
             }
         } else if (token.type == Token.Type.LeftL) {
             M();
@@ -506,28 +507,31 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                 T();
                 break;
             case LeftB:
+                identifierList.addLevel();
                 getToken();
                 W();
                 if (token.type == Token.Type.RightB) {
+                    identifierList.removeLevel();
                     getToken();
                 } else {
                     error(token,"缺少右大括号");
                 }
                 break;
             case Identifier:
-                Pair<Identifier,Integer> pair = identifierList.findIdentifier(token.name);
-                Integer layer = pair.getValue();
-                Identifier identifier = pair.getKey();
+                Pair<Integer,Integer> pair = identifierList.findIdentifier(token.name);
+
                 getToken();
                 if (token.type == Token.Type.LeftL) {
                     getToken();
                     V();
                     if (token.type == Token.Type.RightL) {
                         String s = "make ide happy";
-                        if (identifier == null) {
+                        if (pair == null) {
                             error(token,"标示符未声明");
-                        } else
-                            System.out.println("CALL " + layer + "," + identifier.address);
+                        } else {
+                            Integer layer = pair.getValue();
+                            System.out.println("CAL " + layer + "," + pair.getKey());
+                        }
                         getToken();
                     } else {
                         error(token,"缺少右括号");
@@ -535,7 +539,12 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                 } else if (token.type == Token.Type.Assignment) {
                     getToken();
                     M();
-                    System.out.println("STO " + layer + "," + identifier.address);
+                    if (pair == null) {
+                        error(token,"标示符未声明");
+                    } else {
+                        Integer layer = pair.getValue();
+                        System.out.println("STO " + layer + "," + pair.getKey());
+                    }
                 } else {
                     error(token,"缺少等号");
                 }
@@ -704,13 +713,13 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
             if (token.type == Token.Type.LeftL) {
                 getToken();
                 if (token.type == Token.Type.Identifier) {
-                    Pair<Identifier,Integer> pair = identifierList.findIdentifier(token.name);
-                    Integer layer = pair.getValue();
-                    Identifier identifier = pair.getKey();
-                    if (identifier == null) {
+                    Pair<Integer,Integer> pair = identifierList.findIdentifier(token.name);
+                    if (pair == null) {
                         error(token,"标示符未声明");
-                    } else
-                        System.out.println("RED " + layer + "," + identifier.address);
+                    } else {
+                        Integer layer = pair.getValue();
+                        System.out.println("RED " + layer + "," + pair.getKey());
+                    }
                     getToken();
                     if (token.type == Token.Type.RightL) {
                         getToken();
@@ -750,6 +759,7 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                 if (token.type == Token.Type.Add || token.type == Token.Type.Sub || token.type == Token.Type.Constant
                         || token.type == Token.Type.LeftL || token.type == Token.Type.Identifier) {
                     M();
+                    System.out.println("WRT 0,0");
                 }
                 if (token.type == Token.Type.RightL) {
                     getToken();

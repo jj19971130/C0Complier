@@ -16,7 +16,7 @@ public class IdentifierList {
         level.push(0);
     }
 
-    public Pair<Identifier,Integer> findIdentifier(String name) {
+    public Pair<Integer,Integer> findIdentifier(String name) {
         int layer = 0;
         ListIterator<Identifier> i = list.listIterator(list.size());
         while (i.hasPrevious()) {
@@ -30,10 +30,10 @@ public class IdentifierList {
                         if (tmp1 > pos) {
                             layer++;
                         } else {
-                            return new Pair<>(tmp,layer);
+                            return new Pair<>(pos - tmp1 + 1,layer);
                         }
                     } else {
-                        return new Pair<>(tmp,layer);
+                        return new Pair<>(pos + 1,layer);
                     }
                 }
             }
@@ -65,8 +65,8 @@ public class IdentifierList {
     }
 
     public boolean changeIdentifier(String name, Identifier identifier) {
-        Pair<Identifier,Integer> tmp1 = findIdentifier(name);
-        Identifier tmp = tmp1.getKey();
+        Pair<Integer,Integer> tmp1 = findIdentifier(name);
+        Identifier tmp = list.get(tmp1.getKey());
         if (tmp == null) {
             return false;
         } else {

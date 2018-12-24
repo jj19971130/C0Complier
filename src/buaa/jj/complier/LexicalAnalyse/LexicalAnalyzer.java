@@ -67,8 +67,12 @@ public class LexicalAnalyzer extends Thread {
         getChar();
         while (!eof) {
             Token token = new Token();
-            while (c == ' ' || c == '\t' || c == '\n')
+            while (c == ' ' || c == '\t' || c == '\n') {
                 getChar();
+            }
+            if (eof) {
+                break;
+            }
             int[] xy = compiler.getPos();
             token.x = xy[0];
             token.y = xy[1];
