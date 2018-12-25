@@ -43,7 +43,9 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
         identifierList.init();
         getToken();
         A();
-        compiler.handleCompileInformationEvent(new CompileInformationEvent(this,"语法分析结束",false));
+        synchronized (compiler) {
+            compiler.handleCompileInformationEvent(new CompileInformationEvent(this,"语法分析结束",false));
+        }
     }
 
     private void A() { //程序（入口处）
@@ -68,7 +70,7 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                 int tmpx = token.x;
                 String tmpname = token.name;
                 getToken();
-                if (token.type == Token.Type.Comma) {
+                if (token.type == Token.Type.Comma || token.type == Token.Type.Semicolon) {
                     {//变量插入符号表
                         Identifier identifier = new Identifier();
                         identifier.name = tmpname;
@@ -78,7 +80,7 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                             error(token,"标示符重复定义");
                         }
                     }
-                    do {
+                    while (token.type == Token.Type.Comma) {
                         getToken();
                         if (token.type != Token.Type.Identifier) {
                             error(token,"缺少标示符");
@@ -93,7 +95,7 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                             }
                         }
                         getToken();
-                    } while (token.type == Token.Type.Comma);
+                    }
                     if (token.type == Token.Type.Semicolon) {
                         getToken();
                     } else {
@@ -192,9 +194,11 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
                         I();
                     } else {
                         error(token, "缺少函数名");
+                        break;
                     }
                 } else {
                     error(token,"缺少函数返回值类型");
+                    break;
                 }
             } while (true);
         } else {
@@ -792,6 +796,8 @@ public class SyntaxAnalyzer extends Thread implements EventListener {
     }
 
     private void error(Token token, String errorMessage) {
-        compiler.handleCompileInformationEvent(new CompileInformationEvent(this,"语法分析在" + token.x + "行" + token.y + "列处出现错误，" + errorMessage,true));
+        synchronized (compiler) {
+            compiler.handleCompileInformationEvent(new CompileInformationEvent(this,"语法分析在" + token.x + "行" + token.y + "列处出现错误，" + errorMessage,true));
+        }
     }
 }

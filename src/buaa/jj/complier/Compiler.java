@@ -65,7 +65,7 @@ public class Compiler extends Application implements EventListener {
         return getLineColumnNum(i - 1);
     }
 
-    public void handleCompileInformationEvent(CompileInformationEvent event) {
+    public synchronized void handleCompileInformationEvent(CompileInformationEvent event) {
         if (event.getError()) {
             errorNum++;
         }

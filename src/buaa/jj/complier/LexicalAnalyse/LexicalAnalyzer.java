@@ -234,7 +234,10 @@ public class LexicalAnalyzer extends Thread {
             tokens.add(token);
         }
         finish = true;
-        compiler.handleCompileInformationEvent(new CompileInformationEvent(this,"词法分析结束",false));
+        synchronized (compiler) {
+            compiler.handleCompileInformationEvent(new CompileInformationEvent(this,"词法分析结束",false));
+        }
+
     }
 
     public void handleEOFEvent(EOFEvent event) {
@@ -243,6 +246,8 @@ public class LexicalAnalyzer extends Thread {
 
     private void error(Token token) {
         getChar();
-        compiler.handleCompileInformationEvent(new CompileInformationEvent(this,"词法分析在" + token.x + "行" + token.y + "列处出现错误",true));
+        synchronized (compiler) {
+            compiler.handleCompileInformationEvent(new CompileInformationEvent(this,"词法分析在" + token.x + "行" + token.y + "列处出现错误",true));
+        }
     }
 }

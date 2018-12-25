@@ -18,6 +18,7 @@ public class Logger extends PrintStream {
     public void clearState() {
         num = 0;
         state = false;
+        finalCode.delete(0,finalCode.length());
     }
 
     public void setBuffer(boolean state) {
